@@ -1,0 +1,7 @@
+สวัสดีค่ะ {USERNAME}!
+
+รหัสลิงค์ สำหรับรีเซตรหัสผ่านเว็บไซด์ ของคุณคือ
+
+{SITEPATH}/resetpassword.php?email={EMAIL}&key={KEY}
+
+ขอบคุณค่ะ

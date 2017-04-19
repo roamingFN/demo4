@@ -1,0 +1,477 @@
+<?php
+	include 'connect.php';
+	include 'session.php';
+	include 'inc/php/functions_statusConvert.php';
+
+	$packageid = $_GET['packageid'];
+	/*
+	 * select messge with customer_id and order_id from total_message_log
+	 * */
+	$sqlTotalMessagLog='select * from total_message_log where customer_id = '.$user_id.'
+			and packageid = '.$packageid.' order by message_date';
+	$totalMessgeLog = mysql_query($sqlTotalMessagLog, $connection);
+	$totalMessageLogData=array();
+	if (mysql_num_rows($totalMessgeLog) > 0) {
+		while($row=mysql_fetch_array($totalMessgeLog)){
+			$totalMessageLogData[]=$row;
+		}
+	}
+?>
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <?php include 'page_script.php';  ?>
+	<link rel="stylesheet" href="./css/chatstyle.css" />
+  </head>
+  <body>
+   <?php include 'nav_bar.php';  ?>
+   <?php showMessage(); ?>
+	<div class="content manage">
+		<?php include 'left_menu.php' ?>
+		<div class="menu-content col3">
+
+
+<?php
+
+$select_package = mysql_query("select * from package 
+								where packageid = '$packageid'
+								and customerid = '$user_id' ", $connection);
+
+if (mysql_num_rows($select_package) > 0) {
+	$package = mysql_fetch_array($select_package);
+	$transport_name = convertTransportName($package['shippingid']);
+	if ($transport_name == "0") { $transport_name = "มารับด้วยตนเอง"; }
+	echo "
+		<div>
+			<table style='width:100%;'>
+				<tr>
+					<td style='width:400px;vertical-align: text-top;'>
+						<h3>เลขที่กล่อง : ".$package['packageno']."</h3><br />
+						<h3>สถานะกล่อง : ".formatPackageNo($package['statusid'])."</h3><br />
+						<h3>บริการขนส่งในประเทศ : ".$transport_name."</h3>
+					</td>
+					<td style='vertical-align: text-top;'>
+						<h3>ค่าขนส่ง : ".number_format($package['total'],2)."</h3><br />
+						<span style='padding:10px;'><a href='payment.php?package_id=".$packageid."&redirect=3'><button type='button'>ชำระเงิน</button></a></span>
+					</td>
+					<td style='vertical-align: text-top;text-align:right;'>"; ?>
+					<div class="right">
+						<?php 
+							$aproved_amount = 0;
+							$unapprove_amount = 0;
+							$select_topup = mysql_query("select * from customer_request_topup where customer_id = '$user_id'");
+							while ($row = mysql_fetch_array($select_topup)) {
+								if ($row['topup_status']==0) {
+									$unapprove_amount += $row['usable_amout'];
+								}else if ($row['topup_status']==1) {
+									$aproved_amount += $row['usable_amout'];
+								}
+							}
+						?>
+						<table class="content-bordered">
+							<tr><td>ยอดเงินที่เหลืออยู่ : </td><td><b><?php echo number_format($aproved_amount,2); ?></b></td></tr>
+							<tr><td>ยอดเงินที่รอตรวจสอบ : </td><td><b><?php echo number_format($unapprove_amount,2); ?></b></td></tr>
+							<tr><td>ยอดรวม : </td><td><b><?php echo number_format($aproved_amount+$unapprove_amount,2); ?></b></td></tr>
+						</table>
+					</div>
+					<?php echo "
+					</td>
+				</tr>
+			</table>
+		</div>";
+
+
+
+
+	//start table
+	$select_shop_group = mysql_query("	select *
+										from package_detail d, customer_order_product c, product p, package pk 
+										where d.packageid = '$packageid'
+										and d.packageid = pk.packageid 
+										and d.order_product_id = c.order_product_id 
+										and c.product_id = p.product_id
+										and pk.customerid = '$user_id' 
+										group by p.shop_name", $connection);
+
+	if (mysql_num_rows($select_shop_group) > 0) {
+		echo "
+		<form action='' method='post' name='FormPackage' id='FormPackage'>
+			<table class='content-grid'>";
+
+	    $sum_quantity = 0;
+	    $sum_weight = 0;
+	    $sum_m3 = 0;
+	    $sum_price = 0;
+
+	  echo "
+				<tr>
+					<th><center>ลำดับที่</center></th>
+					<th>รายการ</th>
+					<th>จำนวนสินค้า</th>
+					<th>เลขที่ออร์เดอร์</th>
+					<th>น้ำหนัก<br>Kg</th>
+					<th>ขนาด<br>(คิว)</th>
+					<th>เรทค่าส่ง<br>จีน - ไทย</th>
+					<th>ค่าขนส่ง(บาท)</th>
+				</tr>
+				";
+
+		$count = 1;
+		while ($shop_row = mysql_fetch_array($select_shop_group)) {
+			$shop_name = $shop_row['shop_name'];
+
+			echo "
+				<tr style='background-color:#d3d3d3;'>
+					<td colspan='8'>ร้าน ".$shop_name."</td>
+				</tr>
+				";
+
+			$select_item = mysql_query("select *, d.order_id as order_id 
+										from package_detail d
+										left join customer_order_product c on d.order_product_id = c.order_product_id 
+										left join product p on c.product_id = p.product_id 
+										left join customer_order o on c.order_id = o.order_id 
+										left join customer_order_product_tracking t on d.order_product_tracking_id = t.order_product_tracking_id
+										where p.shop_name = '$shop_name'
+										and d.packageid = '$packageid' ", $connection);
+
+			$isGroupRow = false;
+
+			if(mysql_num_rows($select_item) > 0){ 
+
+        while($row = mysql_fetch_array($select_item)) {
+
+        	echo "
+		        <tr>";
+
+		        	// if ($isGroupRow == false) {
+		        	//  	echo "<td class='text-center' rowspan=".mysql_num_rows($select_item)." >".$count."</td>";
+		        	//  	$isGroupRow = true;
+		        	// }
+		        echo "<td class='text-center'>".$count."</td>";
+
+		        	//--> product image section
+		        	echo "<td>";
+		        	$tno = $row['tracking_no'];
+		        	$select_image = mysql_query("select * 
+		        		from package_product pp, product p 
+		        		where pp.packageid = '$packageid' and pp.tracking_no = '$tno' and pp.product_id = p.product_id
+		        		group by p.product_img");
+		        	while($imgrow = mysql_fetch_array($select_image)) {
+		        		echo "<div><a href='".$imgrow['product_url']."' target='_blank'><img class='img-thumb' style='width:50px;' src='".$imgrow['product_img']."'></a></div>";
+		        	}
+		        	// echo "<div><a href='".$row['product_url']."' target='_blank'><img class='img-thumb' style='width:50px;' src='".$row['product_img']."'></a></div>";
+		        	echo "</td>";
+		        	//<-- product image section
+
+							echo "<td>".convertStatementZero($row['total_in_tracking'])."</td>
+							<td><a href='order_show_detail.php?order_id=".$row['order_id']."'>".$row['order_number']."</a></td>
+							<td>".$row['weight']."</td>
+							<td>".$row['m3']."</td>
+							<td>".$row['rate']."</td>
+							<td>".number_format($row['total'],2)."</td>
+		        </tr>
+		        	";
+
+        	$sum_quantity += $row['received_amount'];
+			    $sum_weight += $row['weight'];
+			    $sum_m3 += $row['m3'];
+			    $sum_price += $row['total'];
+			    $count++;
+
+        }
+			}
+
+			
+		}
+		echo "
+			</table>
+			<br />";
+
+		// $select_order = mysql_query("select *
+		// 								from customer_order o
+		// 								where o.customer_id = '$user_id'
+		// 								and o.order_id = '$order_id'", $connection);
+		// $row = mysql_fetch_array($select_order);
+
+		// echo "
+		// 	<table class='content-grid' style='font-size:16px;color:orangered;'>
+		// 		<tr>
+		// 			<td style='text-align:right; padding-right:2em;'>ค่าตีลังไม้ (บาท)</td>
+		// 			<td style='text-align:right; padding-right:2em; width:17%;'><b>".number_format($row['box_price'],2)."</b></td>
+		// 		</tr>
+		// 		<tr>
+		// 			<td style='text-align:right; padding-right:2em;'>ค่าขนส่งภายในประเทศ (บาท)</td>
+		// 			<td style='text-align:right; padding-right:2em; width:17%;'><b>".number_format($row['th_transfer_price'],2)."</b></td>
+		// 		</tr>
+		// 		<tr>
+		// 			<td style='text-align:right; padding-right:2em;'>ค่าใช้จ่ายอื่นๆ (บาท)</td>
+		// 			<td style='text-align:right; padding-right:2em; width:17%;'><b>".number_format($row['other_price'],2)."</b></td>
+		// 		</tr>
+		// 	</table>
+		// 	";
+
+		echo "<h4>สรุปค่าขนส่ง</h4>
+	 					<table class='content-grid'>
+	 					<tr>
+	 						<th>ค่าขนส่ง จีน-ไทย</th>
+							<th>ค่าสินค้าเพิ่มเติม</th>
+	 						<th>ค่าตีลังไม้</th>
+		 					<th>ค่าฝากส่ง</th>
+		 					<th>ค่าขนส่งภายในไทย</th>
+		 					<th>ค่าอื่นๆ</th>
+		 					<th>ยอดรวม(บาท)</th>
+	 					</tr>";
+
+		$select_package = mysql_query("select * from package where packageid = '$packageid' and customerid = '$user_id'");
+	  if (mysql_num_rows($select_package) > 0) {
+	  	while ($row = mysql_fetch_array($select_package)) {
+	  		echo "
+	  				<tr>
+	  					<td>".number_format($row['amount'],2)."</td>
+						<td>".number_format($row['product_price'],2)."</td>
+	 						<td>".number_format($row['amount_box'],2)."</td>
+		 					<td>".number_format($row['amount_pass'],2)."</td>
+		 					<td>".number_format($row['amount_thirdparty'],2)."</td>
+		 					<td>".number_format($row['amount_other'],2);
+
+		 					if ($row['amount_other'] > 0) {
+		 						$amount_other_specify = $row['amount_other_specify'];
+		 						echo " <a onclick='showOtherSpecify();'><img src='images/search-icon.png'></a> ";
+		 					}
+
+		 		echo "</td>
+		 					<td>".number_format($row['total'],2)."</td>
+	 					</tr>";
+	  	}
+		}
+
+		echo "</table>";
+
+		echo "<br /><h4>วิธีการจัดส่งสินค้าในไทย : ".$transport_name."</h4>";
+
+		// $select_tracking = mysql_query("select t.tracking_no from package_detail d, customer_order_product_tracking t 
+		// 	where d.order_product_tracking_id = t.order_product_tracking_id and d.packageid = '$packageid'
+		// 	group by t.tracking_no ");
+		$select_tracking = mysql_query("select trackingno_thai  
+			from package_send
+			where packageid = '$packageid'");
+
+		if (mysql_num_rows($select_tracking) > 0) {
+			$count = 1;
+			while ($row = mysql_fetch_array($select_tracking)) {
+				$trackingthai = explode(',',$row['trackingno_thai']);
+				for ($i=0; $i < count($trackingthai); $i++) { 
+					echo "<h4>Tracking #".$count." : ".$trackingthai[$i]."</h4>";
+					$count = $count + 1;
+				}
+			}
+		}
+
+		echo "<br />";
+	  
+		if ($package['shippingid'] != 0) {
+			$select_address = mysql_query("select *
+				from package p, customer_address a 
+				where p.shipping_address = a.address_id
+				and packageid = '$packageid'");
+		  if (mysql_num_rows($select_address) > 0) {
+				$row_address = mysql_fetch_array($select_address);
+
+				echo "<h4>ที่อยู่สำหรับจัดส่งสินค้า</h4>";
+				echo "<div class='well'>"; 
+				echo "<strong>ชื่อ ".$row_address['address_name']."</strong><br />";
+				echo $row_address['line_1']."<br />".$row_address['city'].", ".$row_address['country']."<br />".$row_address['zipcode']."<br />Tel. ".$row_address['phone']; 
+				echo "</div>";
+			}
+		}
+	}
+
+	echo "
+	<br/>
+	<table style='width:100%;'>
+		<tr>
+			<td>
+			<a href='topup.php'><button type='button' class='button'><i class='material-icons'>local_atm</i><h3>เติมเงิน</h3></button></a>
+			<a href='payment.php?package_id=".$packageid."&redirect=3'><button type='button' class='button'><i class='material-icons'>payment</i><h3>ชำระเงิน</h3></button></a>
+			</td>
+			<td style='text-align:right;'>
+			<a href='#' onclick='gotoTop()'>กลับไปด้านบน</a>
+			</td>
+		</tr>
+	</table>
+	<br /><br />
+	</form>";
+} 
+
+?>
+<!-- message box -->
+	
+	<style type="text/css">
+		
+	</style>
+	<script src="//cdn.tinymce.com/4/tinymce.min.js"></script>
+	<script>
+	tinymce.init({
+		  selector: 'textarea',
+		  height: 85,
+		  menubar:false,
+		  statusbar: false,
+		  forced_root_block : "",
+		  toolbar: ' styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+		  content_css: '//www.tinymce.com/css/codepen.min.css'
+		});
+
+		$(document).ready(function(){
+			
+			$('#msgSendBtn').on('click',function(){
+				/**
+				 check data is not empty
+				 send data with ajax (order_id,customer_id,txtMessage)
+				 return data when select and redirect class "msgBox-send"
+				*/
+				var content = tinyMCE.get('txtMessage').getContent();
+				var packageId = $('#msgPackageId').val();
+				if($.trim(content) != ''){
+				   // editor is empty ...
+					$.post("./message-do.php",{frmMsgSendPk:$.trim(content),packageId:packageId},function(res){						
+						var json = $.parseJSON(res);
+						console.log(json);
+						var html='<div class="msgBox-send-right">';
+						    html+='<div class="msgBox-send-content">';
+				        	html+='<div class="triangle-isosceles right">'+json[0].content+'</div>';
+				    		html+='</div>';
+				    		html+='<div class="msgBox-send-info">';
+				            html+='<div class="msgBox-username">Me</div>';
+				        	html+='<div class="msgBox-date">'+json[0].message_date+'</div>';
+				    		html+='</div>';
+							html+='</div>';
+
+							$('.msgBox-send').append(html);
+							$(".msgBox-send").animate({ scrollTop: 20000}, 1000);
+							var tinymce_editor_id = 'txtMessage'; 
+							tinymce.get(tinymce_editor_id).setContent('');
+						
+				  	});
+				}
+				
+			});
+		});
+	  
+	
+	</script>
+	
+	<?php 
+		
+	?>
+	<div class="msgBox">
+		<div class="msgBox-header">
+			<h3>รายการข้อความ</h3>
+		</div>
+		
+		<div class="msgBox-send">
+			
+			<?php if(count($totalMessageLogData)>0){ ?>
+			<?php foreach($totalMessageLogData as $val){?>
+			<?php if($val['user_id']!=0){?>
+		
+			<div class="msgBox-send-left">
+				<div class="msgBox-send-info">
+						<div class="msgBox-username">admin@order2easy.com</div>
+						<div class="msgBox-date"><?php echo $val['message_date'];?></div>
+				</div>
+				<div class="msgBox-send-content">
+					<div class="triangle-isosceles left"><?php echo $val['content'];?></div>
+				</div>
+			</div>
+			
+			<?php 
+				}else{
+			?>
+			<div class="msgBox-send-right">
+				<div class="msgBox-send-content">
+					<div class="triangle-isosceles right"><?php echo $val['content'];?></div>
+				</div>
+				<div class="msgBox-send-info">
+					<div class="msgBox-username">Me</div>
+					<div class="msgBox-date"><?php echo $val['message_date'];?></div>
+				</div>
+				
+			</div>
+			<?php }//end if-else check userId!=0?>
+			<?php }//end foreach?>
+			<?php }//end if?>
+		</div>
+		
+		
+	</div>
+	<form action="" onSubmit="return false;" id="frmMsgSend">
+		<div class="msgSend">
+				<div class="msgSend-message"><textarea name="txtMessage" id="txtMessage"></textarea></div>
+		</div>
+		
+		<input type="hidden" name="msgPackageId" id="msgPackageId" value="<?php echo $packageid;?>"/>
+		<div class="msgSend-btn"><button id="msgSendBtn">Send</button></div>
+	</form>
+	<!-- end message box -->
+</div>
+</div><br /><br />
+
+
+<div class="modal" id="package_other_specity" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">ค่าอื่นๆ</h4>
+			</div>
+			<div class="modal-body">
+				<center><?php echo $amount_other_specify; ?></center>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">ตกลง</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+        <?php include 'modal.php';  ?>
+        <?php include 'footer.php';  ?>
+
+        <script src="js/core.js"></script>
+        <script type="text/javascript">
+
+        	function showOtherSpecify(){
+        		$('#package_other_specity').modal('show');
+        	}
+
+        	function gotoTop(){
+						$('html, body').animate({ scrollTop: 0 }, 'slow');
+					}
+
+          function runScript(e) {
+              if (e.keyCode == 13) {
+                  searchURL();
+              }
+          }
+		  
+		  $(document).ready(function(){
+
+						<?php if($_GET['msg']=='view'){ ?>
+
+							$("#msgBoxSend").animate(
+								{ 
+									scrollTop: $('#msgBoxSend').prop('scrollHeight')
+								}, 500);	
+
+					
+						<?php }?>
+						});
+
+        </script>
+        <script src="dist/sweetalert.min.js"></script>
+        <link rel="stylesheet" href="dist/sweetalert.css">
+    </body>
+</html>

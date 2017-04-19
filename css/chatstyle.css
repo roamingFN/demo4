@@ -1,0 +1,171 @@
+/* THE SPEECH BUBBLE
+------------------------------------------------------------------------------------------------------------------------------- */
+
+.triangle-isosceles {
+  position:relative;
+  padding:15px;
+  margin:1em 0 3em;
+  color:#000;
+  background:#f3961c; /* default background for browsers without gradient support */
+  /* css3 */
+  background:-webkit-gradient(linear, 0 0, 0 100%, from(#f9d835), to(#f3961c));
+  background:-moz-linear-gradient(#f9d835, #f3961c);
+  background:-o-linear-gradient(#f9d835, #f3961c);
+  background:linear-gradient(#f9d835, #f3961c);
+  -webkit-border-radius:10px;
+  -moz-border-radius:10px;
+  border-radius:10px;
+  text-align: left;
+}
+
+/* Variant : for top positioned triangle
+------------------------------------------ */
+
+.triangle-isosceles.top {
+  background:-webkit-gradient(linear, 0 0, 0 100%, from(#f3961c), to(#f9d835));
+  background:-moz-linear-gradient(#f3961c, #f9d835);
+  background:-o-linear-gradient(#f3961c, #f9d835);
+  background:linear-gradient(#f3961c, #f9d835);
+}
+
+/* Variant : for left/right positioned triangle
+------------------------------------------ */
+
+.triangle-isosceles.left {
+  margin-left:20px;
+  background:#f2f2f2;
+}
+
+/* Variant : for right positioned triangle
+------------------------------------------ */
+
+.triangle-isosceles.right {
+  margin-right:20px;
+  background:#ecfadc;
+}
+
+/* THE TRIANGLE
+------------------------------------------------------------------------------------------------------------------------------- */
+
+/* creates triangle */
+.triangle-isosceles:after {
+  content:"";
+  position:absolute;
+  bottom:-15px; /* value = - border-top-width - border-bottom-width */
+  left:50px; /* controls horizontal position */
+  border-width:15px 15px 0; /* vary these values to change the angle of the vertex */
+  border-style:solid;
+  border-color:#f2f2f2 transparent;
+  /* reduce the damage in FF3.0 */
+  display:block;
+  width:0;
+}
+
+/* Variant : top
+------------------------------------------ */
+
+.triangle-isosceles.top:after {
+  top:-15px; /* value = - border-top-width - border-bottom-width */
+  right:50px; /* controls horizontal position */
+  bottom:auto;
+  left:auto;
+  border-width:0 15px 15px; /* vary these values to change the angle of the vertex */
+  border-color:#f3961c transparent;
+}
+
+/* Variant : left
+------------------------------------------ */
+
+.triangle-isosceles.left:after {
+	border-color: transparent #f2f2f2;
+    border-width: 5px 15px 5px 0;
+    bottom: auto;
+    left: -15px;
+    top: 8px;
+}
+
+/* Variant : right
+------------------------------------------ */
+
+.triangle-isosceles.right:after {
+ 	border-color: transparent #ecfadc;
+    border-width: 5px 0 5px 15px;
+    bottom: auto;
+    left: auto;
+    right: -15px;
+    top: 8px;
+}
+
+.msgBox {
+    border: 1px solid #ddd;
+    border-radius: 4px 4px 0 0;
+}
+
+.msgBox-header {
+    background-color: #3f51b5;
+    border-radius: 4px 4px 0 0;
+    color: #fff;
+}
+
+.msgBox-send {
+    max-height: 500px;
+    overflow-y: scroll;
+    padding: 0 15px;
+}
+
+.msgBox-send-info,.msgBox-send-content{
+	display:inline-block;
+}
+
+.msgBox-send-info {
+    bottom: 12px;
+    position: relative;
+}
+
+.msgBox-send-info {
+    top: 16px;
+    vertical-align: top;
+}
+
+.msgBox-send-content{
+	white-space: normal;
+    max-width: 73%;
+}
+
+.msgBox-send-right{
+	text-align:right;
+}
+
+.msgBox p{
+	font-size:13px;
+}
+
+.msgBox-username{
+	font-size:13px;
+}
+.msgBox-date{
+	color: #999;
+    font-size: 12px;
+}
+
+/*msgSend*/
+.msgSend{
+	margin-top:5px;
+}
+.msgSend-message{
+	width:100%;
+}
+.msgSend-message textarea{
+	width:100%;
+}
+
+.msgSend-message,.msgSend-btn{
+	display:inline-block;
+}
+
+.msgSend-btn {
+    display: block;
+    margin-top: 10px;
+    text-align: right;
+}
+
