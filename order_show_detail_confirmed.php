@@ -354,7 +354,7 @@ if (mysql_num_rows($select_order) > 0) {
 							echo "
 						<tr ".$table_style." >
 							<td style='text-align: center;'>".++$i."</td>
-							<td><div><a href='".$row['product_url']."' target='_blank'><img class='img-thumb' style='width:50px;' src='".$row['product_img']."'></a></div></td>
+							<td><div><a href='".$row['product_url']."' target='_blank'><img class='img-thumb' style='width:50px;' src='".$row['product_img']."' title='".$row['product_size']." ".$row['product_color']."'></a></div></td>
 							<td style='text-align: center;'>".$row['first_unitquantity']."</td>
 							<td style='text-align: center;'>".$quantity."</td>
 							<td style='text-align: center;'>".number_format($price,2)."</td>

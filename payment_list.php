@@ -86,24 +86,28 @@
 	</div>
 	</div>
 
-	<form role="form" method="post" action="">
-		<table  class="content-light">
+	<form role="form" method="post" action="" >
+		<table  class="content-light" border=0>
 			<tr >
-				<td >เลขที่กล่อง</td>
-				<td ><input type="text" name="package_no" class="form-control" placeholder="ระบุเลขที่กล่อง"></td>
-				<td >รายการ</td>
-				<td>
-					<div class="form-group">
-							<select class="form-control" name="category">
+				<td width="11%">เลขที่กล่อง</td>
+				<td width="18%"><input type="text" name="package_no" class="form-control" placeholder="ระบุเลขที่กล่อง" style="width:150px;"></td>
+				<td width="7%">รายการ</td>
+				<td width="23%">
+					<div>
+							<select class="form-control" name="category" style="width:200px;">
 								<option value="">ไม่เลือก</option>
 								<option value="1">กล่อง</option>
 								<option value="2">ออร์เดอร์</option>
 							</select>
 					</div>
+					
 				</td>
-				<td rowspan="2" >
+				<td rowspan="3" align="left" width="12%">
+					<div>
+					<button type="submit" name="search" value="Submit" ><i class="material-icons">search</i> ค้นหา</button>
+					</div>
 				</td>
-				<td rowspan="2">
+				<td rowspan="3" align="right">
 					<?php 
 						$aproved_amount = 0;
 						$unapprove_amount = 0;
@@ -125,10 +129,10 @@
 			</tr>
 			<tr>
 				<td>เลขที่ออร์เดอร์</td>
-				<td><input type="text" name="order_no" class="form-control" placeholder="ระบุเลขที่ออร์เดอร์"></td>
+				<td><input type="text" name="order_no" class="form-control" placeholder="ระบุเลขที่ออร์เดอร์" style="width:150px;"></td>
 				<td>สถานะ</td>
-				<td><div class="form-group">
-							<select class="form-control" name="status">
+				<td><div>  <!-- <td><div class="form-group">  -->
+							<select class="form-control" name="status" style="width:200px;">
 								<option value="">ไม่เลือก</option>
 								<option value="1">รอชำระค่าสินค้า</option>
 								<option value="2">รอชำระค่าขนส่ง</option>
@@ -142,21 +146,20 @@
 			<tr>
 				<td>จากวันที่</td>
 				<td>
-					<div class="input-group input-append date" id="datePicker" style="width:170px;">
+					<div class="input-group input-append date" id="datePicker" style="width:150px;">
 							<input type="text" class="form-control" name="payment_date_start" value="" placeholder="ระบุวันที่" />
 							<span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span></span>
 					</div>
 				</td>
 				<td>ถึงวันที่</td>
 				<td >
-					<div class="input-group input-append date" id="datePicker2" style="width:170px;">
+					<div class="input-group input-append date" id="datePicker2" style="width:150px;">
 						<input type="text" class="form-control" name="payment_date_end" value="" placeholder="ระบุวันที่" />
 						<span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span></span>
 					</div>
+					
 				</td>
-				<td colspan="2">
-				&nbsp<button type="submit" name="search" value="Submit" ><i class="material-icons">search</i> ค้นหา</button>&nbsp<button href="#" tpye="button">แสดงทั้งหมด</button>
-				</td>
+				
 			</tr>
 			
 		</table>
@@ -250,7 +253,10 @@
 		<form role="form" method="post" action="payment.php">
 		<table class="content-grid" >
 			<tr class="bg-primary">
-				<th><input type="checkbox" onClick="toggle(this)" name="checkall"/> เลือกทั้งหมด</th>
+				<th>
+					<div><input type="checkbox" onClick="toggleOrder(this)" name="checkAllOrder"/> เลือกค่าสินค้าทั้งหมด</div>
+					<div><input type="checkbox" onClick="togglePackage(this)" name="checkAllPackage"/> เลือกค่าขนส่งทั้งหมด</div>
+				</th>
 				<th>รายการ</th>
 				<th>เลขที่</th>
 				<th>วันที่สร้าง</th>
@@ -297,7 +303,7 @@
 					<tr>
 						<td>";
 
-						if ($package_row['statusid'] == 2) {
+						if ($package_row['statusid'] == 3) {
 							echo "<input type='checkbox' name='package_id[]' value='".$package_row['packageid']."' data-price='".$package_row['total']."' >";
 						}
 
@@ -350,18 +356,28 @@
 </div><br /><br />
 <script type="text/javascript">
 
-function toggle(source) {
-
+function toggleOrder(source) {
 	var sum_order_price = 0;
-	var sum_package_price = 0;
 	var count_order = 0;
-	var count_package = 0;
 
 	order_id = document.getElementsByName('order_id[]');
 	for(var i=0, n=order_id.length;i<n;i++) {
 			order_id[i].checked = source.checked;
 			sum_order_price += parseFloat(order_id[i].getAttribute("data-price"));
 	}
+
+	if (source.checked) {
+		document.getElementById('all_item_count').innerHTML = order_id.length;
+		document.getElementById('total_price').innerHTML = (sum_order_price).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+	}else{
+		document.getElementById('all_item_count').innerHTML = "0";
+		document.getElementById('total_price').innerHTML = "0.00";
+	}
+}
+
+function togglePackage(source) {
+	var sum_package_price = 0;
+	var count_package = 0;
 
 	package_id = document.getElementsByName('package_id[]');
 	for(var i=0, n=package_id.length;i<n;i++) {
@@ -370,13 +386,12 @@ function toggle(source) {
 	}
 
 	if (source.checked) {
-		document.getElementById('all_item_count').innerHTML = order_id.length+package_id.length;
-		document.getElementById('total_price').innerHTML = (sum_order_price+sum_package_price).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+		document.getElementById('all_item_count').innerHTML = package_id.length;
+		document.getElementById('total_price').innerHTML = (sum_package_price).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 	}else{
 		document.getElementById('all_item_count').innerHTML = "0";
 		document.getElementById('total_price').innerHTML = "0.00";
 	}
-
 }
 
 function isNumber(evt) {
@@ -471,11 +486,13 @@ $(document).ready(function() {
 					for(var j=0, k=order_id.length;j<k;j++) {
 						order_id[j].style.display = "block";
 					}
-
 					package_id = document.getElementsByName('package_id[]');
 					for(var j=0, k=package_id.length;j<k;j++) {
 						package_id[j].style.display = "block";
 					}
+
+					document.getElementsByName('checkAllOrder')[0].checked = false;
+					document.getElementsByName('checkAllPackage')[0].checked = false;
 			}
 
 			document.getElementById('all_item_count').innerHTML = count_order+count_package;
