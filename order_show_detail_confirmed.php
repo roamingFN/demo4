@@ -246,7 +246,10 @@ if (mysql_num_rows($select_order) > 0) {
 					</td>
 					<td style='vertical-align: bottom;text-align:right;'>
 						<!-- 16/05/2017 Pratchaya Ch. Add print page function -->
-						<div class='printMenu'><i class='material-icons' onclick='window.open(\"order_print_table.php?order_id=".$order_id."\");' title='Print'>&#xE8AD;</i></div>
+						<div class='printMenu'>
+							<i class='material-icons' onclick='exportExcel();' title='Export'>&#xE24D;</i>
+							<i class='material-icons' onclick='window.open(\"order_print_table.php?order_id=".$order_id."\");' title='Print'>&#xE8AD;</i>
+						</div>
 					</td>
 					<td style='vertical-align: text-top;text-align:right; '>"; ?>
 					<div class="right">
@@ -1178,6 +1181,10 @@ order by customer_order_product.order_id", $connection);
 				};
 				checkitem();
 				$("#myCarousel").on("slid.bs.carousel", "", checkitem);
+
+				function exportExcel(){
+					window.open('order_excel.php?order_id='+<?php echo $order_id; ?>,'_blank');
+				}
 				</script>
 				<script src="dist/sweetalert2.min.js"></script>
 				<link rel="stylesheet" href="dist/sweetalert2.css">

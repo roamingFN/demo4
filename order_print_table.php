@@ -45,6 +45,7 @@
 					<td>
 						<h4>สั่งซื้อวันที่ : ".$newFormat."</h4>
 						<h4>พิมพ์วันที่ : ".$now."</h4>
+						<h4>&nbsp;</h4>
 					</td>
 				</tr>
 			</table>
@@ -77,6 +78,7 @@
 				<tr>
 					<th style='width: 2%;text-align: center;'>ลำดับ</th>
 					<th style='width: 10%;text-align: center;'>ร้าน $shop_name</th>
+					<th style='width: 10%;text-align: center;'><div>ไซด์</div><div>สี</div></th>
 					<th style='width: 10%;text-align: center;'>จำนวนที่สั่ง</th>
 					<th style='width: 10%;text-align: center;'>จำนวนที่สั่งได้</th>
 					<th style='width: 10%;text-align: center;'>ราคา<br />หยวน (¥)</th>
@@ -114,6 +116,7 @@
 		        <tr ".$table_style." >
 		        	<td style='text-align: center;'>".++$i."</td>
 		        	<td><div><img class='img-thumb' style='width:50px;' src='".$row['product_img']."'></div></td>
+		        			<td style='text-align: center;'><div>".$row['product_size']."</div><div>".$row['product_color']."</div></td>
 							<td style='text-align: center;'>".convertStatementZero($row['first_unitquantity'])."</td>
 							<td style='text-align: center;'>".convertStatementZero($row['quantity'])."</td>
 							<td style='text-align: center;'>".number_format($row['unitprice'],2)."</td>

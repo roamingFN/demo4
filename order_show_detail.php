@@ -184,7 +184,7 @@ if (mysql_num_rows($select_order) > 0) {
 		<div>
 			<table style='width:100%;'>
 				<tr>
-					<td style='width:400px;vertical-align: text-top;'>
+					<td style='width:450px;vertical-align: text-top;'>
 						<h3>เลขที่ออร์เดอร์ : ".$order_row['order_number']."</h3><br />
 						<h3>สถานะออร์เดอร์ : ".convertOrderStatus($order_row['order_status_code'])."</h3><br />
 						<h3>บริการขนส่งในประเทศ : ".convertTransportName($order_row['order_shipping_th_option'])."</h3><br />
@@ -196,7 +196,10 @@ if (mysql_num_rows($select_order) > 0) {
 					</td>
 					<td style='vertical-align: bottom;text-align:right;'>
 						<!-- 16/05/2017 Pratchaya Ch. Add print page function -->
-						<div class='printMenu'><i class='material-icons' onclick='window.open(\"order_print_table.php?order_id=".$order_id."\");' title='Print'>&#xE8AD;</i></div>
+						<div class='printMenu'>
+							<i class='material-icons' onclick='exportExcel();' title='Export'>&#xE24D;</i>
+							<i class='material-icons' onclick='window.open(\"order_print_table.php?order_id=".$order_id."\");' title='Print'>&#xE8AD;</i>
+						</div>
 					</td>
 					<td style='vertical-align: text-top;text-align:right;'>"; ?>
 					<div class="right">
@@ -553,6 +556,10 @@ $(document).ready(function() {
 			};
 			checkitem();
 			$("#myCarousel").on("slid.bs.carousel", "", checkitem);
+
+			function exportExcel(){
+				window.open('order_excel.php?order_id='+<?php echo $order_id; ?>,'_blank');
+			}
 
         </script>
         <script src="dist/sweetalert2.min.js"></script>
